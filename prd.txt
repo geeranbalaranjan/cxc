@@ -1,162 +1,245 @@
-# Product Requirements Document (PRD)
+# Product Requirements Document (PRD) — v2  
+## Track-Aligned Edition
 
-## Project Title
-
-**Tariff Impact Radar: Visualizing Canadian Companies at Risk from U.S. Tariffs**
-
-## Hackathon Tracks
-
-* **Best Use of Data Visualization**
-* **Best Use of AI for Good**
-
-## 1. Problem Statement
-
-Canadian companies are significantly affected by U.S. tariffs, but the data describing *who* is most at risk, *why*, and *how severely* is fragmented, technical, and difficult for non-experts to interpret. Policymakers, journalists, investors, and the public lack a clear, accessible way to understand the real-world impact of trade policy on Canadian businesses and workers.
-
-## 2. Goal & Vision
-
-Build an interactive, AI-powered data visualization platform that:
-
-* Identifies Canadian companies and sectors most exposed to U.S. tariffs
-* Clearly explains *why* they are at risk (supply chains, export dependency, tariff categories)
-* Quantifies and visualizes potential economic impact
-* Makes trade data understandable and actionable for non-technical users
-
-This project aims to increase transparency, support informed decision-making, and promote evidence-based policy discussions.
-
-## 3. Target Users
-
-* **Policy makers & government analysts** – Assess trade exposure and economic risk
-* **Journalists & researchers** – Quickly identify impacted sectors and companies
-* **Investors & analysts** – Evaluate tariff-related risk
-* **General public & students** – Learn how tariffs affect the Canadian economy
-
-## 4. User Needs & Use Cases
-
-### Core User Questions
-
-* Which Canadian companies are most at risk from U.S. tariffs?
-* Which industries and regions are most affected?
-* What factors drive a company’s risk score?
-* How would tariff increases or removals change the risk landscape?
-
-### Example Use Cases
-
-* A journalist exploring which provinces are most affected by steel or lumber tariffs
-* A policy analyst simulating a new tariff scenario
-* A student learning about international trade through interactive visuals
-
-## 5. Key Features
-
-### 5.1 Data Aggregation & Composition
-
-* Combine multiple datasets, including:
-
-  * Canadian export data by company/sector
-  * U.S. tariff schedules (HS codes)
-  * Company financials (revenue, export dependence)
-  * Employment and regional economic data
-
-### 5.2 AI-Powered Risk Scoring (AI for Good)
-
-* Generate a **Tariff Risk Score** per company using AI models
-
-* Factors may include:
-
-  * Percentage of revenue from U.S. exports
-  * Exposure to tariffed goods
-  * Supply chain concentration
-  * Company size and resilience indicators
-
-* AI-generated plain-language explanations:
-
-  * “This company is high risk because 65% of revenue comes from tariffed aluminum exports to the U.S.”
-
-### 5.3 Interactive Data Visualizations (Data Viz Track)
-
-* **National Overview Dashboard**
-
-  * Heatmap of Canada by province
-  * Industry-level exposure charts
-
-* **Company-Level View**
-
-  * Risk score breakdown
-  * Revenue exposure graphs
-  * Timeline of tariff changes
-
-* **Scenario Explorer**
-
-  * Sliders to simulate tariff increases/decreases
-  * Real-time visual updates
-
-### 5.4 Search & Filters
-
-* Search by company name
-* Filter by industry, province, risk level
-
-## 6. AI Responsibilities & Ethics
-
-* AI is used for:
-
-  * Risk scoring and pattern detection
-  * Natural-language explanations of complex data
-  * Scenario analysis
-
-* Guardrails:
-
-  * Clear explanation that results are estimates, not predictions
-  * Transparent methodology and feature importance
-  * No proprietary or private company data
-
-## 7. Success Metrics
-
-### Hackathon Success
-
-* Judges clearly understand the problem and impact within 2 minutes
-* Visualizations are intuitive without explanation
-* Clear demonstration of AI adding meaningful insight (not just automation)
-
-### Product Metrics
-
-* Time to insight (how quickly users identify at-risk companies)
-* Engagement with interactive scenarios
-* Clarity ratings from user feedback
-
-## 8. Non-Goals (Out of Scope)
-
-* Real-time stock price prediction
-* Confidential or private company data
-* Legal or financial advice
-
-## 9. Technical Overview (High-Level)
-
-* **Frontend:** Interactive web dashboard (charts, maps, filters)
-* **Backend:** Data processing and AI scoring pipeline
-* **AI Layer:** Model for risk scoring + explanation generation
-* **Data Sources:** Public trade, tariff, and economic datasets
-
-## 10. Risks & Mitigations
-
-| Risk                              | Mitigation                                              |
-| --------------------------------- | ------------------------------------------------------- |
-| Data gaps or outdated tariff data | Use latest public datasets and clearly label timestamps |
-| Over-reliance on AI output        | Provide transparent methodology and visual breakdowns   |
-| Complexity for users              | Default views + guided explanations                     |
-
-## 11. Why This Wins “AI for Good”
-
-* Improves transparency around trade policy impacts
-* Helps communities understand economic vulnerability
-* Supports better policy and public discourse
-
-## 12. Why This Wins “Best Data Visualization”
-
-* Turns dense, technical trade data into intuitive visuals
-* Allows exploration across geography, industry, and time
-* Makes complex cause-and-effect relationships visible
+## Product Name
+**TariffShock**  
+*An explainable, scenario-based tariff risk engine for Canadian industries*
 
 ---
 
-**One-line pitch:**
-*A visual, AI-powered map of which Canadian companies are most vulnerable to U.S. tariffs — and why.*
+## 0. Track Alignment Summary
+
+| Track | How TariffShock Aligns |
+|---|---|
+| **Best Use of Data Visualization** | Interactive risk leaderboards, before/after scenario deltas, and trade-flow breakdowns make complex trade data immediately understandable. |
+| **Best Use of AI for Good** | Preventative, explainable decision-support that helps policymakers anticipate economic harm and reduce unintended consequences of tariffs. |
+| **Best Use of Gemini API** | Gemini translates quantitative risk outputs into plain-English insights and policy-ready summaries, improving accessibility and trust. |
+
+---
+
+## 1. Problem Statement
+
+Global trade policy changes—such as tariffs, trade wars, and border taxes—introduce sudden and uneven economic risk across Canadian sectors and companies.
+
+Current gaps:
+- Lack of **quantitative, explainable** tools to assess exposure.
+- Analyses are often static, backward-looking, or opaque.
+- No intuitive way to **simulate “what-if” tariff scenarios** and see impacts instantly.
+
+**TariffShock** fills this gap by **quantifying**, **explaining**, and **simulating** tariff risk exposure for Canadian sectors (with optional company views).
+
+---
+
+## 2. Product Vision
+
+Enable users to **anticipate and understand tariff shocks before they occur**, empowering faster, fairer, and more informed decisions through transparent data and simulation.
+
+---
+
+## 3. Goals & Success Criteria
+
+### Primary Goals
+1. Quantify tariff risk exposure for Canadian sectors.
+2. Simulate hypothetical tariff scenarios in real time.
+3. Explain *why* risk changes using interpretable AI.
+
+### Hackathon Success Metrics
+- End-to-end demo in ≤2 minutes.
+- One compelling, realistic scenario walkthrough.
+- Judges understand the logic without technical background.
+- Clear value proposition per track.
+
+---
+
+## 4. Target Users
+
+### Primary
+- Policy analysts and economists  
+- Finance and investment analysts  
+- Supply chain and trade risk professionals
+
+### Secondary
+- Students and researchers  
+- Journalists and educators
+
+---
+
+## 5. User Stories
+
+- **As an analyst**, I want to rank sectors by tariff risk so I can prioritize monitoring.  
+- **As a policymaker**, I want to simulate tariff changes and see downstream impacts before decisions are made.  
+- **As a user**, I want clear explanations for *why* a sector’s risk score changed.  
+- **As a judge**, I want to immediately see the decision this tool enables.
+
+---
+
+## 6. Core Features (MVP)
+
+### 6.1 Sector Risk Leaderboard (Data Visualization Track)
+- Ranked list of Canadian sectors by **Tariff Risk Score (0–100)**.
+- Columns:
+  - Risk score
+  - **Δ Risk** vs baseline (post-simulation)
+  - Top export partners
+  - Export dependency %
+
+**Acceptance Criteria**
+- Sorting by risk and Δ risk.
+- Color-coded deltas (increase/decrease).
+- Click-through to sector detail view.
+
+---
+
+### 6.2 Scenario Simulation Engine (AI for Good Track)
+Users can simulate:
+- **Tariff increase (%)** (0–25%)
+- **Target partners** (US, China, EU, All)
+- **Sector / product group** (e.g., steel, autos, lumber)
+
+Live updates:
+- Risk scores and rankings
+- Affected export value (clearly labeled proxy)
+- Highlighted “most impacted” sectors
+
+**Acceptance Criteria**
+- Updates render in <1s for demo datasets.
+- Clear baseline vs shocked comparison.
+- Assumptions visibly labeled.
+
+---
+
+### 6.3 Explainability Panel (Gemini API Track)
+For a selected sector:
+- Top 3–5 risk drivers (e.g., partner exposure, concentration).
+- Quantitative contribution breakdown.
+- **Gemini-generated plain-English explanation**, e.g.:
+  > “Risk increased primarily due to heavy reliance on US exports and high product concentration in steel.”
+
+**Acceptance Criteria**
+- Gemini output references actual numeric inputs.
+- Tone is non-technical and policy-appropriate.
+- One-click “Generate Briefing” summary.
+
+---
+
+## 7. Out of Scope (Hackathon)
+
+- Real-time tariff ingestion pipelines
+- Long-term macroeconomic forecasting
+- Firm-level financial predictions
+- Production-grade accuracy guarantees
+
+---
+
+## 8. Data Requirements
+
+### Trade Data
+- Canadian export values by:
+  - Sector / HS category
+  - Trading partner country
+
+### Tariff Data
+- Curated or simulated tariff deltas for major partners/products
+
+### Optional (Stretch)
+- Company revenue by geography
+- Historical tariff event indicators
+
+---
+
+## 9. Risk Modeling Approach
+
+### 9.1 Sector Tariff Risk Score
+Normalized score combining:
+- **Exposure**: share of exports to tariff-affected partners
+- **Concentration**: dependency on few partners/products
+- **Shock magnitude**: simulated tariff increase
+
+Conceptual formula:
+Risk = (Exposure × w1 + Concentration × w2) × Shock
+
+
+Weights are fixed and documented for transparency.
+
+---
+
+### 9.2 Simulation Logic
+Changing scenario inputs recalculates:
+- Affected export value (proxy)
+- Updated sector risk scores
+- Sector ranking deltas
+
+---
+
+## 10. Explainability & Gemini Integration
+
+### Gemini Responsibilities
+- Convert numeric drivers into natural-language explanations
+- Generate policy-ready summaries (≤120 words)
+- Answer “Why did risk change?” prompts grounded in data
+
+**Prompt Inputs**
+- Sector name
+- Scenario context (partners, tariff %)
+- Risk components and deltas
+
+**Output Constraints**
+- No speculative claims
+- Explicit references to provided metrics
+
+---
+
+## 11. UX & Demo Requirements (Data Visualization)
+
+### Must-Have
+- Interactive sliders/dropdowns
+- Immediate visual feedback
+- Baseline vs shocked comparison
+
+### Nice-to-Have
+- Bar charts or heatmaps
+- Preloaded demo scenarios
+- Exportable summary view
+
+---
+
+## 12. Non-Functional Requirements
+
+- Fast and stable for live demos
+- Clear labeling of assumptions
+- Interpretability prioritized over precision
+- Accessible color palette and typography
+
+---
+
+## 13. Risks & Mitigations
+
+| Risk | Mitigation |
+|---|---|
+| Data gaps | Use proxies; disclose assumptions |
+| Oversimplification | Position as decision-support, not prediction |
+| Time constraints | Sector-level MVP; company layer optional |
+
+---
+
+## 14. Future Extensions
+
+- Company-level exposure scoring
+- Trade war escalation pathways
+- Integration with market indicators
+- Policy optimization recommendations
+
+---
+
+## 15. Track-Specific One-Sentence Pitches
+
+- **Data Visualization:**  
+  *TariffShock turns complex trade data into intuitive, interactive visuals that reveal where tariff risk concentrates—and how it shifts under policy changes.*
+
+- **AI for Good:**  
+  *TariffShock uses explainable AI to help policymakers anticipate and mitigate economic harm before tariff decisions are made.*
+
+- **Gemini API:**  
+  *TariffShock leverages Gemini to translate quantitative risk models into clear, policy-ready explanations accessible to non-technical decision-makers.*
+
+---
