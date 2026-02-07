@@ -1,0 +1,162 @@
+# Product Requirements Document (PRD)
+
+## Project Title
+
+**Tariff Impact Radar: Visualizing Canadian Companies at Risk from U.S. Tariffs**
+
+## Hackathon Tracks
+
+* **Best Use of Data Visualization**
+* **Best Use of AI for Good**
+
+## 1. Problem Statement
+
+Canadian companies are significantly affected by U.S. tariffs, but the data describing *who* is most at risk, *why*, and *how severely* is fragmented, technical, and difficult for non-experts to interpret. Policymakers, journalists, investors, and the public lack a clear, accessible way to understand the real-world impact of trade policy on Canadian businesses and workers.
+
+## 2. Goal & Vision
+
+Build an interactive, AI-powered data visualization platform that:
+
+* Identifies Canadian companies and sectors most exposed to U.S. tariffs
+* Clearly explains *why* they are at risk (supply chains, export dependency, tariff categories)
+* Quantifies and visualizes potential economic impact
+* Makes trade data understandable and actionable for non-technical users
+
+This project aims to increase transparency, support informed decision-making, and promote evidence-based policy discussions.
+
+## 3. Target Users
+
+* **Policy makers & government analysts** – Assess trade exposure and economic risk
+* **Journalists & researchers** – Quickly identify impacted sectors and companies
+* **Investors & analysts** – Evaluate tariff-related risk
+* **General public & students** – Learn how tariffs affect the Canadian economy
+
+## 4. User Needs & Use Cases
+
+### Core User Questions
+
+* Which Canadian companies are most at risk from U.S. tariffs?
+* Which industries and regions are most affected?
+* What factors drive a company’s risk score?
+* How would tariff increases or removals change the risk landscape?
+
+### Example Use Cases
+
+* A journalist exploring which provinces are most affected by steel or lumber tariffs
+* A policy analyst simulating a new tariff scenario
+* A student learning about international trade through interactive visuals
+
+## 5. Key Features
+
+### 5.1 Data Aggregation & Composition
+
+* Combine multiple datasets, including:
+
+  * Canadian export data by company/sector
+  * U.S. tariff schedules (HS codes)
+  * Company financials (revenue, export dependence)
+  * Employment and regional economic data
+
+### 5.2 AI-Powered Risk Scoring (AI for Good)
+
+* Generate a **Tariff Risk Score** per company using AI models
+
+* Factors may include:
+
+  * Percentage of revenue from U.S. exports
+  * Exposure to tariffed goods
+  * Supply chain concentration
+  * Company size and resilience indicators
+
+* AI-generated plain-language explanations:
+
+  * “This company is high risk because 65% of revenue comes from tariffed aluminum exports to the U.S.”
+
+### 5.3 Interactive Data Visualizations (Data Viz Track)
+
+* **National Overview Dashboard**
+
+  * Heatmap of Canada by province
+  * Industry-level exposure charts
+
+* **Company-Level View**
+
+  * Risk score breakdown
+  * Revenue exposure graphs
+  * Timeline of tariff changes
+
+* **Scenario Explorer**
+
+  * Sliders to simulate tariff increases/decreases
+  * Real-time visual updates
+
+### 5.4 Search & Filters
+
+* Search by company name
+* Filter by industry, province, risk level
+
+## 6. AI Responsibilities & Ethics
+
+* AI is used for:
+
+  * Risk scoring and pattern detection
+  * Natural-language explanations of complex data
+  * Scenario analysis
+
+* Guardrails:
+
+  * Clear explanation that results are estimates, not predictions
+  * Transparent methodology and feature importance
+  * No proprietary or private company data
+
+## 7. Success Metrics
+
+### Hackathon Success
+
+* Judges clearly understand the problem and impact within 2 minutes
+* Visualizations are intuitive without explanation
+* Clear demonstration of AI adding meaningful insight (not just automation)
+
+### Product Metrics
+
+* Time to insight (how quickly users identify at-risk companies)
+* Engagement with interactive scenarios
+* Clarity ratings from user feedback
+
+## 8. Non-Goals (Out of Scope)
+
+* Real-time stock price prediction
+* Confidential or private company data
+* Legal or financial advice
+
+## 9. Technical Overview (High-Level)
+
+* **Frontend:** Interactive web dashboard (charts, maps, filters)
+* **Backend:** Data processing and AI scoring pipeline
+* **AI Layer:** Model for risk scoring + explanation generation
+* **Data Sources:** Public trade, tariff, and economic datasets
+
+## 10. Risks & Mitigations
+
+| Risk                              | Mitigation                                              |
+| --------------------------------- | ------------------------------------------------------- |
+| Data gaps or outdated tariff data | Use latest public datasets and clearly label timestamps |
+| Over-reliance on AI output        | Provide transparent methodology and visual breakdowns   |
+| Complexity for users              | Default views + guided explanations                     |
+
+## 11. Why This Wins “AI for Good”
+
+* Improves transparency around trade policy impacts
+* Helps communities understand economic vulnerability
+* Supports better policy and public discourse
+
+## 12. Why This Wins “Best Data Visualization”
+
+* Turns dense, technical trade data into intuitive visuals
+* Allows exploration across geography, industry, and time
+* Makes complex cause-and-effect relationships visible
+
+---
+
+**One-line pitch:**
+*A visual, AI-powered map of which Canadian companies are most vulnerable to U.S. tariffs — and why.*
