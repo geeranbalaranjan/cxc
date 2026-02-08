@@ -182,7 +182,10 @@ class BackboardDataLayer:
         if self.ml_model is None:
             return []
 
-        scenario_rows: List[Dict[str, Any]] = []
+        # Batch all feature extraction first (faster than per-sector)
+        features_list = []
+        sector_ids = []
+        
         for sector_id, deterministic in deterministic_by_id.items():
             sector = self.risk_engine.data_loader.get_sector(sector_id)
             if not sector:
@@ -197,7 +200,19 @@ class BackboardDataLayer:
                 "export_value": sector.total_exports,
                 "top_partner_share": sector.top_partner_share,
             }
-            ml_score = float(self.ml_model.predict(features))
+            features_list.append(features)
+            sector_ids.append(sector_id)
+        
+        # Batch predict all at once (much faster than individual predictions)
+        if not features_list:
+            return []
+        
+        ml_scores = self.ml_model.predict_batch(features_list)
+        
+        # Build result rows
+        scenario_rows: List[Dict[str, Any]] = []
+        for sector_id, ml_score in zip(sector_ids, ml_scores):
+            deterministic = deterministic_by_id[sector_id]
             row = deterministic.to_dict()
             row["risk_score"] = round(ml_score, 1)
             row["risk_delta"] = round(ml_score, 1)

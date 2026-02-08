@@ -6,9 +6,11 @@ HTTP API endpoints for the Risk Engine.
 Uses Flask for HTTP routing.
 """
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, Response
 from typing import Optional
 import logging
+import gzip
+import json
 
 from .schemas import Partner, ScenarioInput
 from .risk_engine import RiskEngine, create_risk_engine
@@ -19,6 +21,21 @@ from .routes_backboard import register_backboard_routes
 logger = logging.getLogger(__name__)
 
 from flask_cors import CORS
+
+
+def gzip_response(data):
+    """Helper to create gzipped JSON response for large payloads."""
+    content = json.dumps(data).encode('utf-8')
+    
+    # Only compress if larger than 1KB
+    if len(content) > 1024:
+        gzip_buffer = gzip.compress(content)
+        response = Response(gzip_buffer, mimetype='application/json')
+        response.headers['Content-Encoding'] = 'gzip'
+        response.headers['Vary'] = 'Accept-Encoding'
+        return response
+    else:
+        return jsonify(data)
 
 
 def create_app(data_dir: Optional[str] = None) -> Flask:
@@ -212,7 +229,9 @@ def create_app(data_dir: Optional[str] = None) -> Flask:
                 sector_filter=sector_filter
             )
             response = engine.calculate_scenario(scenario)
-            return jsonify(response.to_dict())
+            
+            # Use gzip compression for large responses
+            return gzip_response(response.to_dict())
         except ValueError as e:
             return jsonify({"error": str(e)}), 400
         except Exception as e:

@@ -10,6 +10,7 @@ import pandas as pd
 from pathlib import Path
 import pickle
 import logging
+from functools import lru_cache
 from typing import Tuple, Dict, List, Any
 
 try:
@@ -31,7 +32,6 @@ logger = logging.getLogger(__name__)
 
 class TariffRiskNN:
     """Neural network for predicting tariff impact risk scores."""
-    
     def __init__(self, model_path: str = None):
         """
         Initialize the NN model.
@@ -46,6 +46,7 @@ class TariffRiskNN:
         self.scaler = StandardScaler()
         self.is_trained = False
         self.model_path = model_path
+        self._prediction_cache = {}  # Simple prediction cache
         
         if model_path and Path(model_path).exists():
             self.load_model(model_path)
@@ -198,6 +199,11 @@ class TariffRiskNN:
         if not self.is_trained or self.model is None:
             raise ValueError("Model not trained. Call train() first.")
         
+        # Check cache first (using sorted tuple as key for hashability)
+        cache_key = tuple(sorted(features.items()))
+        if cache_key in self._prediction_cache:
+            return self._prediction_cache[cache_key]
+        
         # Build feature vector in correct order
         # NOTE: tariff_percent excluded - it has zero variance (always 10.0) in dataset
         # To include it, would need training data with varying tariff values
@@ -217,7 +223,13 @@ class TariffRiskNN:
         pred = self.model.predict(feature_vector, verbose=0)[0][0]
         
         # Scale back to 0-100
-        return float(pred * 100.0)
+        result = float(pred * 100.0)
+        
+        # Cache result (limit cache size to 1000 entries)
+        if len(self._prediction_cache) < 1000:
+            self._prediction_cache[cache_key] = result
+        
+        return result
     
     def predict_batch(self, features_list: List[Dict]) -> List[float]:
         """
@@ -229,7 +241,33 @@ class TariffRiskNN:
         Returns:
             List of risk scores
         """
-        return [self.predict(f) for f in features_list]
+        if not self.is_trained or self.model is None:
+            raise ValueError("Model not trained. Call train() first.")
+        
+        if not features_list:
+            return []
+        
+        # Vectorized batch prediction (much faster than individual calls)
+        feature_matrix = np.array([
+            [
+                f.get('exposure_us', 0.0),
+                f.get('exposure_cn', 0.0),
+                f.get('exposure_mx', 0.0),
+                f.get('hhi_concentration', 0.0),
+                f.get('export_value', 1e9),
+                f.get('top_partner_share', 0.5)
+            ]
+            for f in features_list
+        ])
+        
+        # Scale all at once
+        feature_matrix_scaled = self.scaler.transform(feature_matrix)
+        
+        # Batch predict
+        predictions = self.model.predict(feature_matrix_scaled, verbose=0)
+        
+        # Scale back to 0-100
+        return [float(pred[0] * 100.0) for pred in predictions]
     
     def save_model(self, path: str):
         """Save trained model and scaler."""
