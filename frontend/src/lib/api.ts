@@ -14,10 +14,15 @@ import type {
   CompareResponse,
 } from "../types/api";
 
-const getBaseUrl = (): string =>
-  typeof import.meta.env !== "undefined" && import.meta.env?.VITE_API_BASE_URL
-    ? String(import.meta.env.VITE_API_BASE_URL).replace(/\/$/, "")
-    : "http://localhost:5001";
+const getBaseUrl = (): string => {
+  // In production (Vercel), use empty string for relative paths
+  // In development, default to localhost:5001
+  if (typeof import.meta.env !== "undefined" && import.meta.env?.VITE_API_BASE_URL !== undefined) {
+    const url = String(import.meta.env.VITE_API_BASE_URL).replace(/\/$/, "");
+    return url || ""; // Empty string means relative paths
+  }
+  return "http://localhost:5001";
+};
 
 async function request<T>(
   path: string,
