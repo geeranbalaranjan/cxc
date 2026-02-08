@@ -109,9 +109,9 @@ class RiskEngine:
     
     def calculate_concentration(self, sector: SectorSummary) -> float:
         """
-        Calculate export concentration.
+        Calculate export concentration using HHI index.
         
-        Concentration = top_partner_share
+        Concentration = hhi_concentration (Herfindahl-Hirschman Index)
         
         Args:
             sector: Sector summary data
@@ -119,7 +119,7 @@ class RiskEngine:
         Returns:
             Concentration value in range [0, 1]
         """
-        return sector.top_partner_share
+        return sector.hhi_concentration
     
     def calculate_shock(self, tariff_percent: float) -> float:
         """

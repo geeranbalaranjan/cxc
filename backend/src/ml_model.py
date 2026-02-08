@@ -15,16 +15,19 @@ from typing import Tuple, Dict, List, Any
 
 try:
     import tensorflow as tf
-    from tensorflow import keras
-    from tensorflow.keras import layers, models
+    from tensorflow import keras  # type: ignore
     from sklearn.preprocessing import StandardScaler
     from sklearn.model_selection import train_test_split
     TENSORFLOW_AVAILABLE = True
+    layers = keras.layers
+    models = keras.models
 except ImportError:
     TENSORFLOW_AVAILABLE = False
     tf = None
     keras = None
     StandardScaler = None
+    layers = None
+    models = None
 
 
 logger = logging.getLogger(__name__)

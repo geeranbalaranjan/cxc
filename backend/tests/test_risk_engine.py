@@ -52,7 +52,8 @@ def sample_sector() -> SectorSummary:
             "Other": 0.15
         },
         top_partner=Partner.US,
-        top_partner_share=0.62
+        top_partner_share=0.62,
+        hhi_concentration=0.44  # HHI-based concentration
     )
 
 
@@ -70,7 +71,8 @@ def sample_sector_low_us() -> SectorSummary:
             "Other": 0.10
         },
         top_partner=Partner.EU,
-        top_partner_share=0.40
+        top_partner_share=0.40,
+        hhi_concentration=0.30  # HHI-based concentration
     )
 
 
@@ -212,14 +214,14 @@ class TestConcentrationCalculation:
     """Test concentration calculation."""
     
     def test_concentration_equals_top_partner_share(self, mock_engine, sample_sector):
-        """Concentration should equal top partner share."""
+        """Concentration should equal HHI concentration index."""
         concentration = mock_engine.calculate_concentration(sample_sector)
-        assert concentration == 0.62
+        assert concentration == 0.44
     
     def test_concentration_different_sector(self, mock_engine, sample_sector_low_us):
         """Concentration should vary by sector."""
         concentration = mock_engine.calculate_concentration(sample_sector_low_us)
-        assert concentration == 0.40
+        assert concentration == 0.30
 
 
 # ============================================================
@@ -374,6 +376,7 @@ class TestGoldenOutput:
         - Sector: Vehicles (87)
         - Partner shares: US=0.62, China=0.08, EU=0.15, Other=0.15
         - Top partner: US (0.62)
+        - HHI concentration: 0.44
         - Total exports: $50B
         - Scenario: 10% tariff on US
         """
@@ -383,7 +386,8 @@ class TestGoldenOutput:
             total_exports=50_000_000_000,
             partner_shares={"US": 0.62, "China": 0.08, "EU": 0.15, "Other": 0.15},
             top_partner=Partner.US,
-            top_partner_share=0.62
+            top_partner_share=0.62,
+            hhi_concentration=0.44
         )
         
         scenario = ScenarioInput(
@@ -395,13 +399,13 @@ class TestGoldenOutput:
         
         # Expected calculations:
         # exposure = 0.62 (US only)
-        # concentration = 0.62 (top partner share)
+        # concentration = 0.44 (HHI-based)
         # shock = 10/25 = 0.4
-        # risk_raw = (0.6 * 0.62 + 0.4 * 0.62) * 0.4 = (0.372 + 0.248) * 0.4 = 0.248
-        # risk_score = 0.248 * 100 = 24.8
+        # risk_raw = (0.6 * 0.62 + 0.4 * 0.44) * 0.4 = (0.372 + 0.176) * 0.4 = 0.2192
+        # risk_score = 0.2192 * 100 = 21.92 → 21.9
         
         expected_exposure = 0.62
-        expected_concentration = 0.62
+        expected_concentration = 0.44
         expected_shock = 0.4
         expected_risk_raw = (W_EXPOSURE * expected_exposure + W_CONCENTRATION * expected_concentration) * expected_shock
         expected_risk_score = round(expected_risk_raw * 100, 1)
