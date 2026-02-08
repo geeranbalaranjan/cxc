@@ -294,24 +294,24 @@ export function ScenarioControls({
   })();
 
   return (
-    <div className="space-y-2.5 flex-1 flex flex-col">
-      {/* Row 1: Mode, Preset, Tariff % */}
-      <div className="flex items-center gap-4 bg-white/[0.02] border border-white/5 rounded-lg px-3 py-2 flex-wrap">
+    <div className="space-y-2.5 flex-1 flex flex-col ml-6">
+      {/* Controls: Mode, Preset, Tariff %, Partner, Sector, Actions */}
+      <div className="flex items-end gap-4 bg-white/[0.02] border border-white/5 rounded-lg px-3 py-2 flex-wrap">
         {/* Mode */}
-        <div className="flex items-center gap-1.5">
-          <span className="text-[10px] uppercase tracking-wider text-white/40 font-medium">Mode</span>
+        <div className="flex flex-col">
+          <span className="text-[10px] uppercase tracking-wider text-white/40 font-medium mb-0.5">Mode</span>
           <div className="flex rounded-md border border-white/10 overflow-hidden">
             <button
               type="button"
               onClick={() => setMode("preset")}
-              className={`px-2.5 py-1 text-[11px] font-medium transition-colors ${mode === "preset" ? "bg-white/10 text-white" : "text-white/50 hover:text-white/70"}`}
+              className={`px-2.5 py-1.5 text-[11px] font-medium transition-colors ${mode === "preset" ? "bg-white/10 text-white" : "text-white/50 hover:text-white/70"}`}
             >
               Preset
             </button>
             <button
               type="button"
               onClick={() => { setMode("custom"); setPresetOpen(false); }}
-              className={`px-2.5 py-1 text-[11px] font-medium transition-colors ${mode === "custom" ? "bg-white/10 text-white" : "text-white/50 hover:text-white/70"}`}
+              className={`px-2.5 py-1.5 text-[11px] font-medium transition-colors ${mode === "custom" ? "bg-white/10 text-white" : "text-white/50 hover:text-white/70"}`}
             >
               Custom
             </button>
@@ -379,10 +379,9 @@ export function ScenarioControls({
             className="w-14 bg-white/5 border border-white/10 rounded text-xs text-white/90 font-mono py-1.5 px-2 focus:outline-none focus:border-white/20"
           />
         </div>
-      </div>
 
-      {/* Row 2: Partner, Sector, Actions */}
-      <div className="flex items-center gap-4 bg-white/[0.02] border border-white/5 rounded-lg px-3 py-2 flex-wrap">
+        <div className="h-4 w-px bg-white/10" />
+
         {/* Partner select */}
         <div className="flex flex-col relative">
           <span className="text-[10px] uppercase tracking-wider text-white/40 font-medium mb-0.5">Partner</span>

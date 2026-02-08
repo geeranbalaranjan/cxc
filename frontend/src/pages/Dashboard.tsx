@@ -182,14 +182,11 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-[#070A12] text-white font-sans selection:bg-blue-500/30">
-      <header className="h-auto border-b border-white/5 flex items-center justify-between px-6 py-3 sticky top-0 bg-[#070A12]/80 backdrop-blur-md z-50">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-blue-600/20 flex items-center justify-center border border-blue-500/20">
-            <ShieldAlert className="w-5 h-5 text-blue-400" />
-          </div>
+      <header className="h-auto border-b border-white/5 flex items-center justify-between px-4 py-2 sticky top-0 bg-[#070A12]/80 backdrop-blur-md z-50">
+        <div className="flex items-center gap-2">
           <div>
-            <h1 className="text-sm font-semibold tracking-tight text-white/90">TradeRisk</h1>
-            <p className="text-[10px] text-white/40 uppercase tracking-widest font-medium">Risk Simulation Engine</p>
+            <h1 className="text-xs font-semibold tracking-tight text-white/90">TradeRisk</h1>
+            <p className="text-[8px] text-white/40 uppercase tracking-widest font-medium">Risk Simulation Engine</p>
           </div>
         </div>
 
