@@ -9,6 +9,13 @@
 
 **TariffShock** is an explainable, scenario-based tariff risk engine for Canadian industries. It quantifies how U.S. and other tariffs impact Canadian export sectors.
 
+### Frameworks & Libraries
+- Python 3.9
+- Flask (API server)
+- pandas (data processing)
+- numpy (numerical operations)
+- pytest (test runner)
+
 ### Hackathon Tracks
 - Best Use of Data Visualization
 - Best Use of AI for Good

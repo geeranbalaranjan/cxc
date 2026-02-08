@@ -13,6 +13,7 @@ import logging
 from .schemas import Partner, ScenarioInput
 from .risk_engine import RiskEngine, create_risk_engine
 from .load_data import load_data, get_data_loader
+from .ml_model import TariffRiskNN
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +38,21 @@ def create_app(data_dir: Optional[str] = None) -> Flask:
         engine = create_risk_engine(loader)
         app.config['RISK_ENGINE'] = engine
         logger.info("Risk engine initialized successfully")
+        
+        # Try to load ML model if available
+        try:
+            ml_model_path = Path(__file__).parent.parent / 'models' / 'tariff_risk_nn'
+            if ml_model_path.exists():
+                ml_model = TariffRiskNN(str(ml_model_path))
+                app.config['ML_MODEL'] = ml_model
+                logger.info("ML model loaded successfully")
+            else:
+                logger.warning("ML model not found at default path - will use formula-based predictions")
+                app.config['ML_MODEL'] = None
+        except Exception as e:
+            logger.warning(f"Failed to load ML model: {e} - falling back to formula")
+            app.config['ML_MODEL'] = None
+            
     except Exception as e:
         logger.error(f"Failed to initialize risk engine: {e}")
         raise
@@ -387,13 +403,125 @@ def create_app(data_dir: Optional[str] = None) -> Flask:
         """Get risk engine configuration."""
         from .risk_engine import W_EXPOSURE, W_CONCENTRATION, MAX_TARIFF_PERCENT
         
+        ml_model = app.config.get('ML_MODEL')
+        
         return jsonify({
             "w_exposure": W_EXPOSURE,
             "w_concentration": W_CONCENTRATION,
             "max_tariff_percent": MAX_TARIFF_PERCENT,
             "risk_formula": "risk = (w_exposure * exposure + w_concentration * concentration) * shock",
-            "shock_formula": "shock = tariff_percent / 25"
+            "shock_formula": "shock = tariff_percent / 25",
+            "ml_model_available": ml_model is not None,
+            "ml_model_note": "ML model provides more accurate predictions based on neural network training"
         })
+    
+    @app.route('/api/predict-ml', methods=['POST'])
+    def predict_ml_risk():
+        """
+        Predict tariff impact risk using trained neural network.
+        More accurate than formula-based approach.
+        
+        Expected JSON:
+        {
+            "exposure_us": float (0-1),
+            "exposure_cn": float (0-1),
+            "exposure_mx": float (0-1),
+            "hhi_concentration": float (0-1),
+            "export_value": float (dollars),
+            "top_partner_share": float (0-1)
+        }
+        
+        Returns:
+            Predicted risk score (0-100)
+        """
+        ml_model = app.config.get('ML_MODEL')
+        
+        if ml_model is None:
+            return jsonify({
+                "error": "ML model not loaded",
+                "note": "Train and save the model first using scripts/train_ml_model.py"
+            }), 503
+        
+        try:
+            data = request.get_json()
+            
+            if not data:
+                return jsonify({"error": "No JSON payload provided"}), 400
+            
+            # Predict
+            pred_risk = ml_model.predict(data)
+            
+            return jsonify({
+                "method": "neural_network",
+                "predicted_risk_score": round(pred_risk, 2),
+                "features_used": list(data.keys()),
+                "confidence": "High - trained on 98 Canadian sectors"
+            })
+            
+        except Exception as e:
+            logger.error(f"ML prediction error: {e}")
+            return jsonify({"error": str(e)}), 400
+    
+    @app.route('/api/predict-ml-batch', methods=['POST'])
+    def predict_ml_batch():
+        """
+        Predict tariff impact risk for multiple sectors using ML.
+        
+        Expected JSON:
+        {
+            "sectors": [
+                {"sector_id": "87", "export_value": 50000000000, ...},
+                ...
+            ]
+        }
+        
+        Returns:
+            List of predictions
+        """
+        ml_model = app.config.get('ML_MODEL')
+        
+        if ml_model is None:
+            return jsonify({
+                "error": "ML model not loaded"
+            }), 503
+        
+        try:
+            data = request.get_json()
+            sectors = data.get('sectors', [])
+            
+            if not sectors:
+                return jsonify({"error": "No sectors provided"}), 400
+            
+            engine: RiskEngine = app.config['RISK_ENGINE']
+            
+            results = []
+            for sector_id in sectors:
+                sector = engine.data_loader.get_sector(sector_id)
+                if sector:
+                    features = {
+                        'exposure_us': sector.partner_shares.get('US', 0),
+                        'exposure_cn': sector.partner_shares.get('China', 0),
+                        'exposure_mx': sector.partner_shares.get('Mexico', 0),
+                        'hhi_concentration': sector.top_partner_share,
+                        'export_value': sector.total_exports,
+                        'top_partner_share': sector.top_partner_share
+                    }
+                    pred = ml_model.predict(features)
+                    results.append({
+                        "sector_id": sector_id,
+                        "sector_name": sector.sector_name,
+                        "ml_predicted_risk": round(pred, 2)
+                    })
+            
+            return jsonify({
+                "method": "neural_network",
+                "count": len(results),
+                "predictions": results
+            })
+            
+        except Exception as e:
+            logger.error(f"ML batch prediction error: {e}")
+            return jsonify({"error": str(e)}), 400
     
     # Error handlers
     @app.errorhandler(404)

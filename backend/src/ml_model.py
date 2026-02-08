@@ -1,0 +1,277 @@
+"""
+TariffShock ML Model
+====================
+Neural network for predicting tariff impact risk.
+Trained on historical sector trade data and tariff scenarios.
+"""
+
+import numpy as np
+import pandas as pd
+from pathlib import Path
+import pickle
+import logging
+from typing import Tuple, Dict, List
+
+try:
+    import tensorflow as tf
+    from tensorflow import keras
+    from tensorflow.keras import layers, models
+    from sklearn.preprocessing import StandardScaler
+    from sklearn.model_selection import train_test_split
+    TENSORFLOW_AVAILABLE = True
+except ImportError:
+    TENSORFLOW_AVAILABLE = False
+    tf = None
+    keras = None
+    StandardScaler = None
+
+
+logger = logging.getLogger(__name__)
+
+
+class TariffRiskNN:
+    """Neural network for predicting tariff impact risk scores."""
+    
+    def __init__(self, model_path: str = None):
+        """
+        Initialize the NN model.
+        
+        Args:
+            model_path: Path to saved model (optional)
+        """
+        if not TENSORFLOW_AVAILABLE:
+            raise ImportError("TensorFlow and scikit-learn required for ML model")
+        
+        self.model = None
+        self.scaler = StandardScaler()
+        self.is_trained = False
+        self.model_path = model_path
+        
+        if model_path and Path(model_path).exists():
+            self.load_model(model_path)
+    
+    def _build_model(self, input_dim: int) -> models.Sequential:
+        """
+        Build neural network architecture.
+        
+        Input features: tariff%, exposure_us, exposure_cn, exposure_eu, 
+                       concentration, export_value, hhi
+        Output: predicted risk score (0-100)
+        """
+        model = models.Sequential([
+            layers.Input(shape=(input_dim,)),
+            
+            # First dense block
+            layers.Dense(64, activation='relu', name='dense_1'),
+            layers.BatchNormalization(),
+            layers.Dropout(0.3),
+            
+            # Second dense block
+            layers.Dense(32, activation='relu', name='dense_2'),
+            layers.BatchNormalization(),
+            layers.Dropout(0.2),
+            
+            # Third dense block
+            layers.Dense(16, activation='relu', name='dense_3'),
+            layers.Dropout(0.1),
+            
+            # Output layer (bounded 0-100)
+            layers.Dense(1, activation='sigmoid', name='output')
+        ])
+        
+        # Scale sigmoid output to 0-100
+        model = models.Sequential(model.layers)
+        
+        model.compile(
+            optimizer=keras.optimizers.Adam(learning_rate=0.001),
+            loss='mse',
+            metrics=['mae']
+        )
+        
+        return model
+    
+    def prepare_data(self, csv_path: str) -> Tuple[np.ndarray, np.ndarray, List[str]]:
+        """
+        Prepare training data from sector risk dataset.
+        
+        Args:
+            csv_path: Path to sector_risk_dataset.csv
+            
+        Returns:
+            X, y, feature_names
+        """
+        df = pd.read_csv(csv_path)
+        
+        # Select features for the model
+        feature_cols = [
+            'exposure_us',      # US exposure (0-1)
+            'exposure_cn',      # China exposure (0-1)
+            'exposure_mx',      # Mexico exposure
+            'hhi_concentration', # HHI concentration (0-1)
+            'export_value',     # Total exports
+            'top_partner_share' # Top partner concentration (0-1)
+        ]
+        
+        # Target: actual risk score from deterministic engine
+        target_col = 'risk_score'
+        
+        # Remove rows with missing values
+        df = df[feature_cols + [target_col]].dropna()
+        
+        X = df[feature_cols].values
+        y = df[target_col].values / 100.0  # Normalize to 0-1 for sigmoid
+        
+        # Log statistics
+        logger.info(f"Prepared {len(X)} training samples")
+        logger.info(f"Features: {feature_cols}")
+        logger.info(f"Target range: [{y.min():.4f}, {y.max():.4f}]")
+        
+        return X, y, feature_cols
+    
+    def train(self, csv_path: str, epochs: int = 100, batch_size: int = 16, 
+              validation_split: float = 0.2) -> Dict:
+        """
+        Train the neural network on sector data.
+        
+        Args:
+            csv_path: Path to sector_risk_dataset.csv
+            epochs: Number of training epochs
+            batch_size: Batch size
+            validation_split: Validation split ratio
+            
+        Returns:
+            Training history
+        """
+        logger.info("Preparing training data...")
+        X, y, self.feature_names = self.prepare_data(csv_path)
+        
+        # Scale features
+        logger.info("Scaling features...")
+        X_scaled = self.scaler.fit_transform(X)
+        
+        # Split data
+        X_train, X_val, y_train, y_val = train_test_split(
+            X_scaled, y, test_size=validation_split, random_state=42
+        )
+        
+        # Build model
+        logger.info("Building model...")
+        self.model = self._build_model(X_scaled.shape[1])
+        
+        # Train
+        logger.info(f"Training for {epochs} epochs...")
+        history = self.model.fit(
+            X_train, y_train,
+            validation_data=(X_val, y_val),
+            epochs=epochs,
+            batch_size=batch_size,
+            verbose=0,
+            callbacks=[
+                keras.callbacks.EarlyStopping(
+                    monitor='val_loss',
+                    patience=10,
+                    restore_best_weights=True
+                )
+            ]
+        )
+        
+        self.is_trained = True
+        
+        # Log final metrics
+        final_val_loss = history.history['val_loss'][-1]
+        final_val_mae = history.history['val_mae'][-1]
+        logger.info(f"Final val loss: {final_val_loss:.6f}, val MAE: {final_val_mae:.6f}")
+        
+        return history.history
+    
+    def predict(self, features: Dict) -> float:
+        """
+        Predict risk score for given sector features.
+        
+        Args:
+            features: Dict with keys matching training features
+            
+        Returns:
+            Predicted risk score (0-100)
+        """
+        if not self.is_trained or self.model is None:
+            raise ValueError("Model not trained. Call train() first.")
+        
+        # Build feature vector in correct order
+        feature_vector = np.array([
+            features.get('exposure_us', 0.0),
+            features.get('exposure_cn', 0.0),
+            features.get('exposure_mx', 0.0),
+            features.get('hhi_concentration', 0.0),
+            features.get('export_value', 1e9),  # Default 1B
+            features.get('top_partner_share', 0.5)
+        ]).reshape(1, -1)
+        
+        # Scale
+        feature_vector = self.scaler.transform(feature_vector)
+        
+        # Predict
+        pred = self.model.predict(feature_vector, verbose=0)[0][0]
+        
+        # Scale back to 0-100
+        return float(pred * 100.0)
+    
+    def predict_batch(self, features_list: List[Dict]) -> List[float]:
+        """
+        Predict risk scores for multiple sectors.
+        
+        Args:
+            features_list: List of feature dicts
+            
+        Returns:
+            List of risk scores
+        """
+        return [self.predict(f) for f in features_list]
+    
+    def save_model(self, path: str):
+        """Save trained model and scaler."""
+        if not self.is_trained:
+            raise ValueError("Model not trained")
+        
+        path = Path(path)
+        path.mkdir(parents=True, exist_ok=True)
+        
+        self.model.save(str(path / 'model.h5'))
+        
+        with open(path / 'scaler.pkl', 'wb') as f:
+            pickle.dump(self.scaler, f)
+        
+        logger.info(f"Model saved to {path}")
+    
+    def load_model(self, path: str):
+        """Load trained model and scaler."""
+        path = Path(path)
+        
+        self.model = keras.models.load_model(str(path / 'model.h5'))
+        
+        with open(path / 'scaler.pkl', 'rb') as f:
+            self.scaler = pickle.load(f)
+        
+        self.is_trained = True
+        logger.info(f"Model loaded from {path}")
+
+
+def train_and_save_model(csv_path: str, output_dir: str = None) -> TariffRiskNN:
+    """
+    Convenience function to train model and save it.
+    
+    Args:
+        csv_path: Path to sector_risk_dataset.csv
+        output_dir: Where to save model (default: ./models/tariff_risk_nn)
+        
+    Returns:
+        Trained model instance
+    """
+    if output_dir is None:
+        output_dir = Path(__file__).parent.parent / 'models' / 'tariff_risk_nn'
+    
+    model = TariffRiskNN()
+    model.train(csv_path, epochs=150)
+    model.save_model(output_dir)
+    
+    return model
