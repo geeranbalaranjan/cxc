@@ -182,7 +182,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-[#070A12] text-white font-sans selection:bg-blue-500/30">
-      <header className="h-14 border-b border-white/5 flex items-center justify-between px-6 sticky top-0 bg-[#070A12]/80 backdrop-blur-md z-50">
+      <header className="h-auto border-b border-white/5 flex items-center justify-between px-6 py-3 sticky top-0 bg-[#070A12]/80 backdrop-blur-md z-50">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-blue-600/20 flex items-center justify-center border border-blue-500/20">
             <ShieldAlert className="w-5 h-5 text-blue-400" />
@@ -234,25 +234,6 @@ export default function Dashboard() {
               sectorDetailLoading={sectorDetailLoading}
               selectedSectorId={selectedSectorId}
             />
-            <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-5">
-              <h3 className="text-xs font-semibold text-white/50 uppercase tracking-widest mb-3">Simulation Parameters</h3>
-              <div className="space-y-2 text-sm text-white/60">
-                <div className="flex justify-between">
-                  <span>Base Year</span>
-                  <span className="text-white/80 font-mono">2024</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Model</span>
-                  <span className="text-white/80 font-mono">
-                    {config?.risk_formula ?? "V2.1 (Fixed Weights)"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Refresh Rate</span>
-                  <span className="text-white/80 font-mono">Real-time</span>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </main>

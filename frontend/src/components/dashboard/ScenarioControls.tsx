@@ -1,5 +1,10 @@
 import { useState, useCallback, useMemo } from "react";
-import { Play, RotateCcw, ChevronDown, Search } from "lucide-react";
+import { Play, RotateCcw, ChevronDown, Search, X, Plus } from "lucide-react";
+
+export interface SectorTariff {
+  sector_id: string;
+  tariff_percent: number;
+}
 
 export interface ScenarioState {
   tariffPercent: number;
@@ -7,6 +12,8 @@ export interface ScenarioState {
   sectorFilter: string[] | null;
   /** Display names for UI; used to show "EU (via Germany)" and detect unsupported partners */
   partnerDisplayNames?: string[];
+  /** Multi-sector tariffs: array of {sector_id, tariff_percent} pairs */
+  sectorTariffs?: SectorTariff[];
 }
 
 export interface ScenarioPreset {
@@ -247,6 +254,15 @@ export function ScenarioControls({
     return sectors.filter((s) => s.sector_name.toLowerCase().includes(q)).slice(0, 30);
   }, [sectors, customSectorQuery]);
 
+  // Get available sectors (excluding those already in sectorTariffs)
+  const usedSectorIds = useMemo(() => {
+    return new Set(scenario.sectorTariffs?.map(st => st.sector_id) || []);
+  }, [scenario.sectorTariffs]);
+
+  const availableSectors = useMemo(() => {
+    return sectors.filter(s => !usedSectorIds.has(s.sector_id));
+  }, [sectors, usedSectorIds]);
+
   // Resolve preset labels to backend sector IDs by name (backend CSV may use different IDs than real HS2)
   const presetSectors = useMemo(() => {
     return PRESET_SECTOR_LABELS.map(({ label, keywords }) => {
@@ -278,76 +294,78 @@ export function ScenarioControls({
   })();
 
   return (
-    <div className="flex items-center gap-3 flex-wrap bg-white/[0.02] border border-white/5 rounded-lg p-1.5 pr-2">
-      {/* Mode */}
-      <div className="flex items-center gap-1.5">
-        <span className="text-[10px] uppercase tracking-wider text-white/40 font-medium">Mode</span>
-        <div className="flex rounded-md border border-white/10 overflow-hidden">
-          <button
-            type="button"
-            onClick={() => setMode("preset")}
-            className={`px-2.5 py-1 text-[11px] font-medium transition-colors ${mode === "preset" ? "bg-white/10 text-white" : "text-white/50 hover:text-white/70"}`}
-          >
-            Preset
-          </button>
-          <button
-            type="button"
-            onClick={() => { setMode("custom"); setPresetOpen(false); }}
-            className={`px-2.5 py-1 text-[11px] font-medium transition-colors ${mode === "custom" ? "bg-white/10 text-white" : "text-white/50 hover:text-white/70"}`}
-          >
-            Custom
-          </button>
+    <div className="space-y-2.5 flex-1 flex flex-col">
+      {/* Row 1: Mode, Preset, Tariff % */}
+      <div className="flex items-center gap-4 bg-white/[0.02] border border-white/5 rounded-lg px-3 py-2 flex-wrap">
+        {/* Mode */}
+        <div className="flex items-center gap-1.5">
+          <span className="text-[10px] uppercase tracking-wider text-white/40 font-medium">Mode</span>
+          <div className="flex rounded-md border border-white/10 overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setMode("preset")}
+              className={`px-2.5 py-1 text-[11px] font-medium transition-colors ${mode === "preset" ? "bg-white/10 text-white" : "text-white/50 hover:text-white/70"}`}
+            >
+              Preset
+            </button>
+            <button
+              type="button"
+              onClick={() => { setMode("custom"); setPresetOpen(false); }}
+              className={`px-2.5 py-1 text-[11px] font-medium transition-colors ${mode === "custom" ? "bg-white/10 text-white" : "text-white/50 hover:text-white/70"}`}
+            >
+              Custom
+            </button>
+          </div>
         </div>
-      </div>
 
-      <div className="h-4 w-px bg-white/10" />
+        <div className="h-4 w-px bg-white/10" />
 
-      {/* Preset */}
-      <div className="flex flex-col relative">
-        <span className="text-[10px] uppercase tracking-wider text-white/40 font-medium mb-0.5">Preset</span>
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => mode !== "custom" && setPresetOpen((o) => !o)}
-            disabled={mode === "custom"}
-            className="flex items-center gap-1 bg-white/5 border border-white/10 rounded text-xs text-white/90 font-medium py-1.5 pl-2 pr-6 min-w-[160px] truncate focus:outline-none focus:border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {presets.find((p) => p.id === presetId)?.name ?? "Start from preset"}
-            <ChevronDown className="w-3 h-3 text-white/50 absolute right-2" />
-          </button>
-          {presetOpen && mode !== "custom" && (
-            <>
-              <div className="fixed inset-0 z-10" aria-hidden onClick={() => setPresetOpen(false)} />
-              <div className="absolute top-full left-0 mt-1 z-20 bg-[#0f1419] border border-white/10 rounded-md shadow-lg py-1 min-w-[200px] max-h-[320px] overflow-auto">
-                <button
-                  type="button"
-                  onClick={() => handlePresetChange("")}
-                  className="w-full text-left px-3 py-1.5 text-xs text-white/70 hover:bg-white/5"
-                >
-                  Start from preset
-                </button>
-                {presets.map((p) => (
+        {/* Preset */}
+        <div className="flex flex-col relative">
+          <span className="text-[10px] uppercase tracking-wider text-white/40 font-medium mb-0.5">Preset</span>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => mode !== "custom" && setPresetOpen((o) => !o)}
+              disabled={mode === "custom"}
+              className="flex items-center gap-1 bg-white/5 border border-white/10 rounded text-xs text-white/90 font-medium py-1.5 pl-2 pr-6 min-w-[160px] truncate focus:outline-none focus:border-white/20 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {presets.find((p) => p.id === presetId)?.name ?? "Start from preset"}
+              <ChevronDown className="w-3 h-3 text-white/50 absolute right-2" />
+            </button>
+            {presetOpen && mode !== "custom" && (
+              <>
+                <div className="fixed inset-0 z-10" aria-hidden onClick={() => setPresetOpen(false)} />
+                <div className="absolute top-full left-0 mt-1 z-20 bg-[#0f1419] border border-white/10 rounded-md shadow-lg py-1 min-w-[200px] max-h-[320px] overflow-auto">
                   <button
-                    key={p.id}
                     type="button"
-                    onClick={() => handlePresetChange(p.id)}
-                    className={`w-full text-left px-3 py-1.5 text-xs hover:bg-white/5 flex items-center gap-2 ${presetId === p.id ? "text-white bg-white/5" : "text-white/90"}`}
+                    onClick={() => handlePresetChange("")}
+                    className="w-full text-left px-3 py-1.5 text-xs text-white/70 hover:bg-white/5"
                   >
-                    <span className={`w-2 h-2 rounded-sm shrink-0 ${presetId === p.id ? "bg-blue-500" : "bg-white/20"}`} />
-                    {p.name}
+                    Start from preset
                   </button>
-                ))}
-              </div>
-            </>
-          )}
+                  {presets.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => handlePresetChange(p.id)}
+                      className={`w-full text-left px-3 py-1.5 text-xs hover:bg-white/5 flex items-center gap-2 ${presetId === p.id ? "text-white bg-white/5" : "text-white/90"}`}
+                    >
+                      <span className={`w-2 h-2 rounded-sm shrink-0 ${presetId === p.id ? "bg-blue-500" : "bg-white/20"}`} />
+                      {p.name}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </div>
-      </div>
 
-      <div className="h-4 w-px bg-white/10" />
+        <div className="h-4 w-px bg-white/10" />
 
-      {/* Tariff % */}
-      <div className="flex flex-col">
-        <span className="text-[10px] uppercase tracking-wider text-white/40 font-medium mb-0.5">Tariff %</span>
+        {/* Tariff % */}
+        <div className="flex flex-col">
+          <span className="text-[10px] uppercase tracking-wider text-white/40 font-medium mb-0.5">Tariff %</span>
         <input
           type="number"
           min={0}
@@ -362,10 +380,12 @@ export function ScenarioControls({
         />
       </div>
 
-      {/* Partner select */}
-      <div className="flex flex-col relative">
-        <span className="text-[10px] uppercase tracking-wider text-white/40 font-medium mb-0.5">Partner</span>
-        <div className="relative">
+      {/* Row 2: Partner, Sector, Actions */}
+      <div className="flex items-center gap-4 bg-white/[0.02] border border-white/5 rounded-lg px-3 py-2 flex-wrap">
+        {/* Partner select */}
+        <div className="flex flex-col relative">
+          <span className="text-[10px] uppercase tracking-wider text-white/40 font-medium mb-0.5">Partner</span>
+          <div className="relative">
           <button
             type="button"
             onClick={() => {
@@ -591,47 +611,48 @@ export function ScenarioControls({
 
       <div className="h-4 w-px bg-white/10" />
 
-      {/* Reset */}
-      <button
-        type="button"
-        onClick={handleReset}
-        className="p-1.5 text-white/40 hover:text-white transition-colors rounded focus:outline-none focus:ring-1 focus:ring-white/20"
-        title="Reset to default (0%, US, All sectors)"
-      >
-        <RotateCcw className="w-3.5 h-3.5" />
-      </button>
-
-      {/* Baseline (optional) */}
-      {onLoadBaseline && (
-        <div className="flex flex-col">
-          <span className="text-[10px] uppercase tracking-wider text-white/40 font-medium mb-0.5 invisible">Baseline</span>
-          <button
-            type="button"
-            onClick={onLoadBaseline}
-            disabled={runDisabled}
-            className="flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/15 disabled:opacity-50 disabled:cursor-not-allowed text-white/90 text-xs font-medium rounded-md transition-colors"
-          >
-            {isRunning ? "…" : "Baseline"}
-          </button>
-        </div>
-      )}
-
-      {/* Run */}
-      <div className="flex flex-col">
-        <span className="text-[10px] uppercase tracking-wider text-white/40 font-medium mb-0.5 invisible">Run</span>
+        {/* Reset */}
         <button
           type="button"
-          onClick={onRun}
-          disabled={runDisabled}
-          className="flex items-center gap-2 px-4 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:bg-white/10 disabled:text-white/40 text-white text-xs font-semibold rounded-md transition-colors"
+          onClick={handleReset}
+          className="p-1.5 text-white/40 hover:text-white transition-colors rounded focus:outline-none focus:ring-1 focus:ring-white/20"
+          title="Reset to default (0%, US, All sectors)"
         >
-          <Play className="w-3 h-3 fill-current" />
-          {isRunning ? "Running…" : "RUN SIMULATION"}
+          <RotateCcw className="w-3.5 h-3.5" />
         </button>
+
+        {/* Baseline (optional) */}
+        {onLoadBaseline && (
+          <div className="flex flex-col">
+            <span className="text-[10px] uppercase tracking-wider text-white/40 font-medium mb-0.5 invisible">Baseline</span>
+            <button
+              type="button"
+              onClick={onLoadBaseline}
+              disabled={runDisabled}
+              className="flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/15 disabled:opacity-50 disabled:cursor-not-allowed text-white/90 text-xs font-medium rounded-md transition-colors"
+            >
+              {isRunning ? "…" : "Baseline"}
+            </button>
+          </div>
+        )}
+
+        {/* Run */}
+        <div className="flex flex-col">
+          <span className="text-[10px] uppercase tracking-wider text-white/40 font-medium mb-0.5 invisible">Run</span>
+          <button
+            type="button"
+            onClick={onRun}
+            disabled={runDisabled}
+            className="flex items-center gap-2 px-4 py-1.5 bg-blue-600 hover:bg-blue-500 disabled:bg-white/10 disabled:text-white/40 text-white text-xs font-semibold rounded-md transition-colors"
+          >
+            <Play className="w-3 h-3 fill-current" />
+            {isRunning ? "Running…" : "RUN SIMULATION"}
+          </button>
+        </div>
       </div>
 
       {error && (
-        <p className="w-full text-[10px] text-rose-400/90 mt-0.5 flex-shrink-0">{error}</p>
+        <p className="text-[10px] text-rose-400/90 mt-2 flex-shrink-0">{error}</p>
       )}
     </div>
   );

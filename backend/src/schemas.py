@@ -48,6 +48,7 @@ class SectorSummary:
     Constraints:
     - partner shares must sum to approximately 1
     - top_partner_share must be within [0, 1]
+    - hhi_concentration must be within [0, 1]
     """
     sector_id: str
     sector_name: str
@@ -55,6 +56,7 @@ class SectorSummary:
     partner_shares: Dict[str, float]  # {US: 0.62, China: 0.08, EU: 0.15, Other: 0.15}
     top_partner: Partner
     top_partner_share: float
+    hhi_concentration: float = 0.0  # HHI market concentration index (0-1)
     
     def __post_init__(self):
         if self.total_exports < 0:
@@ -62,6 +64,9 @@ class SectorSummary:
         
         if not 0 <= self.top_partner_share <= 1:
             raise ValueError(f"top_partner_share must be in [0, 1], got {self.top_partner_share}")
+        
+        if not 0 <= self.hhi_concentration <= 1:
+            raise ValueError(f"hhi_concentration must be in [0, 1], got {self.hhi_concentration}")
         
         # Validate partner shares sum to approximately 1
         shares_sum = sum(self.partner_shares.values())

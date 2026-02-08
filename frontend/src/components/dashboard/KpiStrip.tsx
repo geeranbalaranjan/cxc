@@ -13,7 +13,7 @@ interface KpiCardProps {
 
 const KpiCard = ({ label, value, change, positive, icon }: KpiCardProps) => {
     return (
-        <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 flex flex-col justify-between h-24 relative overflow-hidden group hover:bg-white/[0.04] transition-colors">
+        <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 flex flex-col justify-between h-32 relative overflow-hidden group hover:bg-white/[0.04] transition-colors">
             <div className="absolute top-0 right-0 p-3 opacity-10 group-hover:opacity-20 transition-opacity">
                 {icon}
             </div>

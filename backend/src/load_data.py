@@ -108,6 +108,7 @@ class DataLoader:
             top_partner_str = row.get('top_partner', 'US')
             top_partner = self._map_country_to_partner(top_partner_str)
             top_partner_share = min(1.0, row.get('top_partner_share', 0) or 0)
+            hhi_concentration = min(1.0, row.get('hhi_concentration', 0) or 0)
             
             try:
                 summary = SectorSummary(
@@ -116,7 +117,8 @@ class DataLoader:
                     total_exports=row.get('export_value', 0) or 0,
                     partner_shares=partner_shares,
                     top_partner=top_partner,
-                    top_partner_share=top_partner_share
+                    top_partner_share=top_partner_share,
+                    hhi_concentration=hhi_concentration
                 )
                 self._sector_summaries[sector_id] = summary
             except ValueError as e:
